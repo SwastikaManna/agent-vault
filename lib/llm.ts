@@ -62,6 +62,17 @@ export const PROVIDERS: Record<
     defaultModel: "llama-3.3-70b-versatile",
     models: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
   },
+  nvidia: {
+    label: "NVIDIA NIM (Nemotron)",
+    baseUrl: "https://integrate.api.nvidia.com/v1",
+    defaultModel: "nvidia/llama-3.3-nemotron-super-49b-v1",
+    models: [
+      "nvidia/llama-3.3-nemotron-super-49b-v1",
+      "nvidia/nemotron-4-340b-instruct",
+      "deepseek-ai/deepseek-r1",
+      "meta/llama-3.1-405b-instruct",
+    ],
+  },
   gemini: {
     label: "Google Gemini",
     baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",

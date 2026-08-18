@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Send, Wrench, KeyRound, Loader2 } from "lucide-react";
+import { Send, Wrench, KeyRound, Loader2, BookMarked } from "lucide-react";
 import TopBar from "@/components/topbar";
 import Markdown from "@/components/markdown";
 import { consumeSSE } from "@/lib/client/sse";
@@ -37,6 +37,7 @@ export default function Workspace() {
   const [active, setActive] = useState<string | null>(null);
   const [hasKey, setHasKey] = useState(false);
   const [settings, setSettings] = useState(loadSettings);
+  const [savedConv, setSavedConv] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const idRef = useRef(1);
 
@@ -136,22 +137,61 @@ export default function Workspace() {
 
   const agentLabel = (role: string) => TEAM_MEMBERS.find((m) => m.role === role)?.label ?? role;
 
+  async function saveConversation() {
+    if (messages.length === 0) return;
+    const now = new Date();
+    const body = messages
+      .map((m) =>
+        m.role === "user"
+          ? `## You\n\n${m.content}`
+          : `## ${agentLabel(m.agent ?? "Agent")}\n\n${m.content}` +
+            (m.traces.length
+              ? "\n\n" +
+                m.traces
+                  .map((t) => `<details><summary>${t.tool} ${JSON.stringify(t.args)}</summary>\n\n${t.result}\n\n</details>`)
+                  .join("\n\n")
+              : "")
+      )
+      .join("\n\n---\n\n");
+    const stamp = `${now.toISOString().slice(0, 10)} ${now.toTimeString().slice(0, 5).replace(":", "-")}`;
+    const res = await fetch("/api/memory", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        path: `Conversations/${stamp}.md`,
+        content: `---\ncreated: ${now.toISOString().slice(0, 10)}\ntags: [conversation]\n---\n\n# Conversation — ${stamp}\n\n${body}`,
+      }),
+    });
+    if (res.ok) {
+      setSavedConv(true);
+      setTimeout(() => setSavedConv(false), 2000);
+    }
+  }
+
   return (
     <>
       <TopBar
         title="Workspace"
         subtitle="Give the team a task — they research, draft, and save to your vault"
         right={
-          !hasKey ? (
-            <Link href="/settings" className="btn">
-              <KeyRound size={13} className="text-warn" /> Add API key
-            </Link>
-          ) : (
-            <span className="pill">
-              <span className="w-[6px] h-[6px] rounded-full bg-ok pulse-dot" />
-              {settings.provider} · {settings.model}
-            </span>
-          )
+          <>
+            {messages.length > 0 && !running && (
+              <button className="btn" onClick={() => void saveConversation()} disabled={savedConv}>
+                <BookMarked size={13} className={savedConv ? "text-ok" : ""} />
+                {savedConv ? "Saved to vault ✓" : "Save conversation"}
+              </button>
+            )}
+            {!hasKey ? (
+              <Link href="/settings" className="btn">
+                <KeyRound size={13} className="text-warn" /> Add API key
+              </Link>
+            ) : (
+              <span className="pill">
+                <span className="w-[6px] h-[6px] rounded-full bg-ok pulse-dot" />
+                {settings.provider} · {settings.model}
+              </span>
+            )}
+          </>
         }
       />
 
