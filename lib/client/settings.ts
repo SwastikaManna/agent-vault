@@ -20,9 +20,9 @@ export interface AppSettings {
 const KEY = "agent-vault-settings";
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  provider: "openai",
+  provider: "pollinations", // free, no key needed — works immediately
   apiKey: "",
-  model: "",
+  model: "openai",
   mcpServers: [],
   amadeusClientId: "",
   amadeusClientSecret: "",
@@ -35,7 +35,7 @@ export function loadSettings(): AppSettings {
     if (raw) {
       const s = JSON.parse(raw);
       return {
-        provider: s.provider || "openai",
+        provider: s.provider || "pollinations",
         apiKey: s.apiKey || "",
         model: s.model || "",
         mcpServers: Array.isArray(s.mcpServers) ? s.mcpServers : [],

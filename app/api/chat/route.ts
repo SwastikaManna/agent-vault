@@ -1,5 +1,5 @@
 import { runTeam, type ChatEvent } from "@/lib/agents/team";
-import { providerBaseUrl } from "@/lib/llm";
+import { providerBaseUrl, KEYLESS_PROVIDERS } from "@/lib/llm";
 import { EMBED_DEFAULTS, type EmbedConfig } from "@/lib/rag";
 import type { MCPServerConfig } from "@/lib/mcp/client";
 import { amadeusFromEnv, type AmadeusConfig } from "@/lib/travel";
@@ -22,11 +22,11 @@ export async function POST(req: Request) {
     return new Response("Invalid JSON", { status: 400 });
   }
 
-  const apiKey = body.apiKey?.trim();
-  if (!apiKey) {
-    return new Response("Missing API key — add one in Settings.", { status: 400 });
-  }
   const provider = body.provider || "openai";
+  const apiKey = body.apiKey?.trim() ?? "";
+  if (!apiKey && !KEYLESS_PROVIDERS.has(provider)) {
+    return new Response("Missing API key — use the free Pollinations provider or add a key in Settings.", { status: 400 });
+  }
   const model = body.model?.trim() || "gpt-4o-mini";
   const history = Array.isArray(body.history) ? body.history : [];
 

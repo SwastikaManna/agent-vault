@@ -33,6 +33,12 @@ export const PROVIDERS: Record<
   string,
   { label: string; baseUrl: string; defaultModel: string; models: string[] }
 > = {
+  pollinations: {
+    label: "Pollinations (free tier — key optional)",
+    baseUrl: "https://text.pollinations.ai/openai",
+    defaultModel: "openai",
+    models: ["openai", "mistral", "llama3.1", "qwen-coder", "unity"],
+  },
   openai: {
     label: "OpenAI",
     baseUrl: "https://api.openai.com/v1",
@@ -90,6 +96,9 @@ export const PROVIDERS: Record<
 export function providerBaseUrl(id: string): string {
   return PROVIDERS[id]?.baseUrl ?? id; // custom base URL passthrough
 }
+
+/** Providers that work with no API key at all (free hosted / local). */
+export const KEYLESS_PROVIDERS = new Set(["pollinations", "ollama"]);
 
 /** Stream a chat completion (no tools). Calls onDelta(textChunk) as chunks arrive. */
 export async function streamChat(

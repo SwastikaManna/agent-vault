@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Dumbbell, Users, Zap, FileText } from "lucide-react";
+import { ArrowRight, BookOpen, Presentation, Users, Zap, FileText } from "lucide-react";
 import TopBar from "@/components/topbar";
 import { TEAM_MEMBERS } from "@/lib/agents/roster";
-import { GYM_TASKS } from "@/lib/gym/tasks";
 import { STACK } from "@/lib/stack";
 
 interface Stats {
@@ -52,32 +51,41 @@ export default function Dashboard() {
         }
       />
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-[1100px] mx-auto px-8 py-10">
+      <div className="flex-1 overflow-y-auto relative">
+        {/* ambient orbs */}
+        <div className="orb w-[420px] h-[420px] bg-[#5e6ad2]/[0.14] top-[-120px] right-[-80px]" />
+        <div className="orb w-[380px] h-[380px] bg-[#38bdf8]/[0.08] top-[38%] left-[-140px]" style={{ animationDelay: "-6s" }} />
+        <div className="orb w-[300px] h-[300px] bg-[#7170ff]/[0.10] bottom-[-100px] right-[22%]" style={{ animationDelay: "-11s" }} />
+
+        <div className="max-w-[1100px] mx-auto px-8 py-10 relative">
           {/* hero */}
-          <div className="mb-10">
+          <div className="mb-10 fade-up">
             <h2 className="text-[32px] font-[510] tracking-[-0.704px] text-ink leading-tight">
               A team of agents that
               <br />
-              <span className="text-accent3">actually remembers.</span>
+              <span className="gradient-text">actually remembers.</span>
             </h2>
             <p className="mt-3 text-[15px] text-muted max-w-[560px] leading-relaxed">
               Agent Vault runs a team of specialists — researcher, writer, librarian, critic — on
-              your tasks. Everything durable lands in an Obsidian-compatible markdown vault you
-              own: open it in Obsidian for free, sync it with git, keep it forever.
+              your tasks. Everything durable lands in an Obsidian-compatible markdown vault you own:
+              open it in Obsidian for free, sync it with git, keep it forever. No API key required —
+              the free Pollinations provider is the default.
             </p>
             <div className="mt-5 flex items-center gap-3">
               <Link href="/workspace" className="btn btn-primary">
-                Open Workspace <ArrowRight size={13} />
+                <Zap size={13} /> Open Workspace <ArrowRight size={13} />
               </Link>
               <Link href="/vault" className="btn">
                 <BookOpen size={13} /> Browse the vault
+              </Link>
+              <Link href="/office" className="btn">
+                <Presentation size={13} /> Make a deck
               </Link>
             </div>
           </div>
 
           {/* stats */}
-          <div className="grid grid-cols-3 gap-3 mb-10">
+          <div className="grid grid-cols-3 gap-3 mb-10 fade-up" style={{ animationDelay: "0.1s" }}>
             {[
               {
                 label: "Vault notes",
@@ -92,9 +100,9 @@ export default function Dashboard() {
                 accent: "#7170ff",
               },
               {
-                label: "Gym tasks",
-                value: String(GYM_TASKS.length),
-                icon: Dumbbell,
+                label: "Built-in connections",
+                value: String(STACK.length + 4),
+                icon: Presentation,
                 accent: "#10b981",
               },
             ].map((s) => (
@@ -116,11 +124,15 @@ export default function Dashboard() {
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center text-[15px]">🖥️</div>
               <div className="min-w-0">
-                <div className="text-[13.5px] font-[510] text-ink">No API key? No problem — run fully local & free</div>
+                <div className="text-[13.5px] font-[510] text-ink">Zero setup, zero cost — pick your free path</div>
                 <p className="text-[12px] text-muted mt-0.5">
-                  Install <span className="mono text-silver">Ollama</span> (ollama.com), pull any model, then pick{" "}
-                  <span className="mono text-silver">"Ollama (local, offline)"</span> in Settings. The team thinks on your
-                  machine, works without internet, and pairs with Home Assistant for real device control on your LAN.
+                  <b className="text-silver">Guaranteed no-key:</b> install{" "}
+                  <span className="mono text-silver">Ollama</span> (ollama.com) → pick{" "}
+                  <span className="mono text-silver">"Ollama (local, offline)"</span> in Settings — the team thinks on
+                  your machine, works offline, pairs with Home Assistant for real device control.
+                  <br />
+                  <b className="text-silver">Or a free key (60 sec):</b> NVIDIA build.nvidia.com or OpenRouter free
+                  models — both cost $0.
                 </p>
               </div>
               <Link href="/settings" className="btn btn-primary ml-auto shrink-0">Set up local mode</Link>
@@ -198,19 +210,24 @@ export default function Dashboard() {
             </div>
             <div className="card p-5">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[13px] font-[510] text-silver">Try the Task Gym</h3>
-                <Link href="/gym" className="text-[11.5px] text-accent2 hover:text-accent3">
-                  all tasks →
+                <h3 className="text-[13px] font-[510] text-silver">Office Studio</h3>
+                <Link href="/office" className="text-[11.5px] text-accent2 hover:text-accent3">
+                  open →
                 </Link>
               </div>
               <ul className="space-y-2">
-                {GYM_TASKS.slice(0, 4).map((t) => (
-                  <li key={t.id} className="flex items-center gap-2 text-[12.5px]">
-                    <span className="tag mono">{t.env === "calendar" ? "cal" : "home"}</span>
-                    <span className="text-muted">{t.title}</span>
+                {[
+                  ["pptx", "Pitch deck from one line of idea"],
+                  ["docx", "Proposal or report — typed, not written"],
+                  ["xlsx", "Budget tracker with formulas-ready rows"],
+                ].map(([ext, desc]) => (
+                  <li key={ext} className="flex items-center gap-2 text-[12.5px]">
+                    <span className="tag mono">{ext}</span>
+                    <span className="text-muted">{desc}</span>
                   </li>
                 ))}
               </ul>
+              <p className="mt-3 text-[10.5px] text-faint">Editable in PowerPoint / Word / Excel — free, no key needed.</p>
             </div>
           </div>
         </div>

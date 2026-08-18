@@ -258,3 +258,77 @@ body {
 .pulse-dot {
   animation: pulse-dot 1.2s ease-in-out infinite;
 }
+
+/* ---- animations ---- */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes orb-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -25px) scale(1.08); }
+  66% { transform: translate(-20px, 18px) scale(0.95); }
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  animation: orb-float 16s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.gradient-text {
+  background: linear-gradient(90deg, #7170ff, #828fff, #5e6ad2, #38bdf8, #7170ff);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-shift 6s ease infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.card {
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(113, 112, 255, 0.35);
+}
+
+.btn {
+  transition: all 0.15s ease;
+}
+.btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+.btn-primary:not(:disabled):hover {
+  box-shadow: 0 0 22px rgba(94, 106, 210, 0.45);
+}
+
+@keyframes logo-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(113, 112, 255, 0.25); }
+  50% { box-shadow: 0 0 18px rgba(113, 112, 255, 0.6); }
+}
+.logo-glow {
+  animation: logo-glow 3s ease-in-out infinite;
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.slide-in-left {
+  animation: slide-in-left 0.3s ease-out both;
+}

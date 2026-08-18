@@ -6,19 +6,19 @@ import {
   LayoutDashboard,
   MessagesSquare,
   BookOpen,
-  Dumbbell,
   Settings,
   Boxes,
   ChevronDown,
   Video,
   Plane,
+  Presentation,
 } from "lucide-react";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/workspace", label: "Workspace", icon: MessagesSquare },
   { href: "/vault", label: "Vault", icon: BookOpen },
-  { href: "/gym", label: "Task Gym", icon: Dumbbell },
+  { href: "/office", label: "Office Studio", icon: Presentation },
   { href: "/meetings", label: "Meetings", icon: Video },
   { href: "/travel", label: "Travel", icon: Plane },
 ];
@@ -37,7 +37,7 @@ export default function Sidebar() {
     <aside className="w-56 shrink-0 h-full bg-panel border-r border-linesub flex flex-col">
       {/* logo */}
       <Link href="/" className="flex items-center gap-2.5 px-4 h-14 border-b border-linesub shrink-0">
-        <div className="w-6 h-6 rounded-md bg-accent flex items-center justify-center">
+        <div className="w-6 h-6 rounded-md bg-accent flex items-center justify-center logo-glow">
           <Boxes size={14} className="text-white" strokeWidth={2.2} />
         </div>
         <div className="leading-none">

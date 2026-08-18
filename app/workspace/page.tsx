@@ -8,6 +8,7 @@ import Markdown from "@/components/markdown";
 import { consumeSSE } from "@/lib/client/sse";
 import { loadSettings } from "@/lib/client/settings";
 import { AGENT_COLORS, TEAM_MEMBERS } from "@/lib/agents/roster";
+import { KEYLESS_PROVIDERS } from "@/lib/llm";
 
 interface TraceItem {
   tool: string;
@@ -43,7 +44,7 @@ export default function Workspace() {
   const idRef = useRef(1);
 
   useEffect(() => {
-    setHasKey(Boolean(loadSettings().apiKey));
+    setHasKey(Boolean(loadSettings().apiKey) || KEYLESS_PROVIDERS.has(loadSettings().provider));
   }, []);
 
   useEffect(() => {
@@ -54,7 +55,8 @@ export default function Workspace() {
     const trimmed = text.trim();
     if (!trimmed || running) return;
     const s = loadSettings();
-    if (!s.apiKey) {
+    const keyless = KEYLESS_PROVIDERS.has(s.provider);
+    if (!s.apiKey && !keyless) {
       window.location.href = "/settings";
       return;
     }
