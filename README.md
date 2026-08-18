@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Agent Vault
 
-## Getting Started
+**A team of AI agents that actually remembers.**
 
-First, run the development server:
+Agent Vault is a multi-agent workspace where a team of specialists — Orchestrator, Researcher,
+Writer, Librarian, Critic — works on your tasks, and everything durable is saved as plain
+markdown notes in **an Obsidian-compatible vault you own**.
+
+No lock-in. No vendor memory. Your AI team's memory is a folder of `.md` files you can open in
+[Obsidian](https://obsidian.md) for free, sync with git, and keep forever.
+
+## What it does
+
+| Feature | Description |
+|---|---|
+| **Multi-agent team** | One orchestrator routes work to specialist roles; the UI shows who's working and why |
+| **Obsidian vault memory** | Agents search the vault before answering, and save durable knowledge as wikilinked markdown notes |
+| **Live web research** | Researcher fetches real pages and is honest about what it could and couldn't verify |
+| **Task Gym** | tau-bench-style evaluation: run an LLM agent against stateful tool environments (calendar, smart home), scored on final state with a full action trace |
+| **BYOK** | Bring your own API key (OpenAI, DeepSeek, OpenRouter, Groq, Gemini) — keys never touch our servers |
+
+## Quick start (local)
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 → Settings → paste your API key → start working in the Workspace.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The vault lives in `./vault`. Open that folder in Obsidian to browse what the team remembers.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Memory: local vs GitHub-backed
 
-## Learn More
+- **Local dev**: notes are written straight to `./vault` (this repo — commit them whenever you like)
+- **Production (Vercel)**: set these env vars and memory becomes a real git repo you can clone:
 
-To learn more about Next.js, take a look at the following resources:
+```
+GITHUB_TOKEN=your_pat
+MEMORY_REPO=yourname/your-vault-repo   # repo must contain a vault/ folder
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy to Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm i -g vercel
+vercel login
+vercel
+```
 
-## Deploy on Vercel
+## Tech
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Next.js (App Router) + TypeScript + Tailwind
+- Linear-inspired design system (dark, precise, indigo accent)
+- SSE streaming for agent chat and gym traces
+- Zero external services required — no database, no auth provider (BYOK means no accounts to manage)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+MIT

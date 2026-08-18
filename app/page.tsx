@@ -1,69 +1,180 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowRight, BookOpen, Dumbbell, Users, Zap, FileText } from "lucide-react";
+import TopBar from "@/components/topbar";
+import { TEAM_MEMBERS } from "@/lib/agents/roster";
+import { GYM_TASKS } from "@/lib/gym/tasks";
+
+interface Stats {
+  notes: number;
+  folders: number;
+  lastModified: string;
+}
+interface RecentNote {
+  path: string;
+  mtime: number;
+}
+
+export default function Dashboard() {
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [recent, setRecent] = useState<RecentNote[]>([]);
+  const [mode, setMode] = useState<string>("local");
+
+  useEffect(() => {
+    fetch("/api/memory?stats=1")
+      .then((r) => r.json())
+      .then((j) => {
+        setStats(j.stats);
+        setMode(j.mode);
+      })
+      .catch(() => {});
+    fetch("/api/memory")
+      .then((r) => r.json())
+      .then((j) => {
+        const files = (j.nodes ?? []).filter((n: { type: string }) => n.type === "file");
+        setRecent(files.slice(0, 6));
+      })
+      .catch(() => {});
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      <TopBar
+        title="Dashboard"
+        subtitle="Your AI team, with a memory you own"
+        right={
+          <Link href="/workspace" className="btn btn-primary">
+            <Zap size={13} /> Start working
+          </Link>
+        }
+      />
+
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-[1100px] mx-auto px-8 py-10">
+          {/* hero */}
+          <div className="mb-10">
+            <h2 className="text-[32px] font-[510] tracking-[-0.704px] text-ink leading-tight">
+              A team of agents that
+              <br />
+              <span className="text-accent3">actually remembers.</span>
+            </h2>
+            <p className="mt-3 text-[15px] text-muted max-w-[560px] leading-relaxed">
+              Agent Vault runs a team of specialists — researcher, writer, librarian, critic — on
+              your tasks. Everything durable lands in an Obsidian-compatible markdown vault you
+              own: open it in Obsidian for free, sync it with git, keep it forever.
+            </p>
+            <div className="mt-5 flex items-center gap-3">
+              <Link href="/workspace" className="btn btn-primary">
+                Open Workspace <ArrowRight size={13} />
+              </Link>
+              <Link href="/vault" className="btn">
+                <BookOpen size={13} /> Browse the vault
+              </Link>
+            </div>
+          </div>
+
+          {/* stats */}
+          <div className="grid grid-cols-3 gap-3 mb-10">
+            {[
+              {
+                label: "Vault notes",
+                value: stats ? String(stats.notes) : "—",
+                icon: FileText,
+                accent: "#38bdf8",
+              },
+              {
+                label: "Agents on the team",
+                value: String(TEAM_MEMBERS.length),
+                icon: Users,
+                accent: "#7170ff",
+              },
+              {
+                label: "Gym tasks",
+                value: String(GYM_TASKS.length),
+                icon: Dumbbell,
+                accent: "#10b981",
+              },
+            ].map((s) => (
+              <div key={s.label} className="card p-4">
+                <div className="flex items-center gap-2 text-[11px] font-[510] uppercase tracking-[0.06em] text-faint">
+                  <s.icon size={12} style={{ color: s.accent }} />
+                  {s.label}
+                </div>
+                <div className="mt-2 text-[26px] font-[510] text-ink tracking-tight">{s.value}</div>
+                <div className="mt-1 text-[10.5px] text-faint mono">
+                  {s.label === "Vault notes" ? `memory: ${mode}` : "ready"}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* agents */}
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[15px] font-[510] text-silver">The team</h3>
+              <span className="text-[11px] text-faint mono">1 model · 5 roles</span>
+            </div>
+            <div className="grid grid-cols-5 gap-3">
+              {TEAM_MEMBERS.map((a) => (
+                <div key={a.role} className="card p-4 hover:bg-white/[0.04] transition-colors">
+                  <div
+                    className="w-7 h-7 rounded-md flex items-center justify-center text-[11px] font-[590] text-white mb-3"
+                    style={{ background: a.color + "22", color: a.color, border: `1px solid ${a.color}44` }}
+                  >
+                    {a.label[0]}
+                  </div>
+                  <div className="text-[12.5px] font-[510] text-ink">{a.label}</div>
+                  <div className="mt-1 text-[11px] text-muted leading-snug">{a.blurb}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* recent notes + quick gym */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="card p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[13px] font-[510] text-silver">Recent memory</h3>
+                <Link href="/vault" className="text-[11.5px] text-accent2 hover:text-accent3">
+                  open vault →
+                </Link>
+              </div>
+              {recent.length === 0 ? (
+                <p className="text-[12px] text-faint">The vault is empty — the team starts remembering on first use.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {recent.map((n) => (
+                    <li key={n.path}>
+                      <Link href={`/vault?note=${encodeURIComponent(n.path)}`} className="group flex items-center gap-2 text-[12.5px]">
+                        <FileText size={12} className="text-faint group-hover:text-accent2" />
+                        <span className="text-muted group-hover:text-silver mono">{n.path}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="card p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[13px] font-[510] text-silver">Try the Task Gym</h3>
+                <Link href="/gym" className="text-[11.5px] text-accent2 hover:text-accent3">
+                  all tasks →
+                </Link>
+              </div>
+              <ul className="space-y-2">
+                {GYM_TASKS.slice(0, 4).map((t) => (
+                  <li key={t.id} className="flex items-center gap-2 text-[12.5px]">
+                    <span className="tag mono">{t.env === "calendar" ? "cal" : "home"}</span>
+                    <span className="text-muted">{t.title}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 }
