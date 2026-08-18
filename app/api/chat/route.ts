@@ -1,5 +1,8 @@
 import { runTeam, type ChatEvent } from "@/lib/agents/team";
 import { providerBaseUrl } from "@/lib/llm";
+import { EMBED_DEFAULTS, type EmbedConfig } from "@/lib/rag";
+import type { MCPServerConfig } from "@/lib/mcp/client";
+import { amadeusFromEnv, type AmadeusConfig } from "@/lib/travel";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +13,8 @@ export async function POST(req: Request) {
     apiKey?: string;
     model?: string;
     history?: { role: "user" | "assistant"; content: string }[];
+    mcpServers?: MCPServerConfig[];
+    amadeus?: { clientId?: string; clientSecret?: string };
   };
   try {
     body = await req.json();
@@ -25,6 +30,18 @@ export async function POST(req: Request) {
   const model = body.model?.trim() || "gpt-4o-mini";
   const history = Array.isArray(body.history) ? body.history : [];
 
+  // embeddings: derive from the chat provider's defaults (same key)
+  let embedCfg: EmbedConfig | null = null;
+  if (EMBED_DEFAULTS[provider]) {
+    embedCfg = { ...EMBED_DEFAULTS[provider], apiKey };
+  }
+
+  // amadeus: env vars win, else client-supplied creds
+  let amadeus: AmadeusConfig | null = amadeusFromEnv();
+  if (!amadeus && body.amadeus?.clientId && body.amadeus?.clientSecret) {
+    amadeus = { clientId: body.amadeus.clientId, clientSecret: body.amadeus.clientSecret };
+  }
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
@@ -36,6 +53,9 @@ export async function POST(req: Request) {
           {
             cfg: { baseUrl: providerBaseUrl(provider), apiKey, model },
             history,
+            mcpServers: body.mcpServers,
+            embedCfg,
+            amadeus,
             onEvent: send,
           },
         );

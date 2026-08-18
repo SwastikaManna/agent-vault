@@ -10,6 +10,8 @@ import {
   Settings,
   Boxes,
   ChevronDown,
+  Video,
+  Plane,
 } from "lucide-react";
 
 const NAV = [
@@ -17,6 +19,8 @@ const NAV = [
   { href: "/workspace", label: "Workspace", icon: MessagesSquare },
   { href: "/vault", label: "Vault", icon: BookOpen },
   { href: "/gym", label: "Task Gym", icon: Dumbbell },
+  { href: "/meetings", label: "Meetings", icon: Video },
+  { href: "/travel", label: "Travel", icon: Plane },
 ];
 
 const AGENTS = [

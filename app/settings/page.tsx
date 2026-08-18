@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { KeyRound, Save, Database, GitBranch, ShieldCheck } from "lucide-react";
+import { KeyRound, Save, Database, GitBranch, ShieldCheck, Plug, Plane, Loader2 } from "lucide-react";
 import TopBar from "@/components/topbar";
 import { PROVIDERS } from "@/lib/llm";
-import { loadSettings, saveSettings, type AppSettings } from "@/lib/client/settings";
+import { loadSettings, saveSettings, type AppSettings, type MCPServerSetting } from "@/lib/client/settings";
 
 export default function Settings() {
   const [s, setS] = useState<AppSettings>(loadSettings());
   const [saved, setSaved] = useState(false);
   const [mode, setMode] = useState<string>("local");
   const [version, setVersion] = useState("");
+  const [mcpTesting, setMcpTesting] = useState<string | null>(null);
+  const [mcpTestResult, setMcpTestResult] = useState<Record<string, string>>({});
+  const [newServer, setNewServer] = useState<MCPServerSetting>({ name: "", type: "stdio", command: "", args: "", url: "" });
 
   useEffect(() => {
     fetch("/api/meta")
@@ -26,6 +29,40 @@ export default function Settings() {
     saveSettings(s);
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
+  }
+
+  async function testMcp(server: MCPServerSetting) {
+    setMcpTesting(server.name);
+    setMcpTestResult((r) => ({ ...r, [server.name]: "Testing…" }));
+    try {
+      const res = await fetch("/api/mcp/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ server }),
+      });
+      const j = await res.json();
+      setMcpTestResult((r) => ({
+        ...r,
+        [server.name]: j.ok ? `✓ ${j.tools.length} tools: ${j.tools.join(", ")}` : `✗ ${j.error}`,
+      }));
+    } catch (e) {
+      setMcpTestResult((r) => ({ ...r, [server.name]: `✗ ${(e as Error).message}` }));
+    } finally {
+      setMcpTesting(null);
+    }
+  }
+
+  function addMcpServer() {
+    if (!newServer.name.trim()) return;
+    const server: MCPServerSetting = {
+      name: newServer.name.trim(),
+      type: newServer.type,
+      command: newServer.command?.trim() || undefined,
+      args: newServer.args?.trim() || undefined,
+      url: newServer.url?.trim() || undefined,
+    };
+    setS({ ...s, mcpServers: [...s.mcpServers, server] });
+    setNewServer({ name: "", type: "stdio", command: "", args: "", url: "" });
   }
 
   return (
@@ -117,6 +154,86 @@ export default function Settings() {
             <div className="flex items-center gap-2 text-[11.5px] text-faint">
               <GitBranch size={12} />
               <span className="mono">MEMORY_REPO + GITHUB_TOKEN env vars switch to GitHub-backed mode on Vercel</span>
+            </div>
+          </section>
+
+          {/* MCP servers */}
+          <section className="card p-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Plug size={14} className="text-accent2" />
+              <h2 className="text-[15px] font-[510] text-ink">MCP servers</h2>
+            </div>
+            <p className="text-[12px] text-muted mb-4">
+              Connect the team to external tools via Model Context Protocol: Home Assistant, browser
+              automation, GitHub, filesystem, databases… stdio servers run locally; HTTP servers
+              work anywhere (including Vercel).
+            </p>
+
+            {s.mcpServers.map((server) => (
+              <div key={server.name} className="flex items-center gap-2 mb-2">
+                <span className="tag">{server.type}</span>
+                <span className="text-[12.5px] mono text-silver">{server.name}</span>
+                <span className="text-[11px] text-faint truncate">
+                  {server.type === "http" ? server.url : `${server.command} ${server.args ?? ""}`}
+                </span>
+                <div className="ml-auto flex items-center gap-1.5">
+                  <button
+                    className="btn !py-1 !px-2.5"
+                    onClick={() => void testMcp(server)}
+                    disabled={mcpTesting !== null}
+                  >
+                    {mcpTesting === server.name ? <Loader2 size={11} className="animate-spin" /> : "Test"}
+                  </button>
+                  <button
+                    className="btn !py-1 !px-2.5"
+                    onClick={() => setS({ ...s, mcpServers: s.mcpServers.filter((x) => x.name !== server.name) })}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+            {Object.entries(mcpTestResult).map(([name, r]) => (
+              <p key={name} className="text-[11px] mono text-muted mb-2">{name}: {r}</p>
+            ))}
+
+            <div className="flex flex-wrap gap-2 mt-3">
+              <input className="input !w-40" placeholder="Name (e.g. home-assistant)" value={newServer.name} onChange={(e) => setNewServer({ ...newServer, name: e.target.value })} />
+              <select className="input !w-32" value={newServer.type} onChange={(e) => setNewServer({ ...newServer, type: e.target.value as "stdio" | "http" })}>
+                <option value="stdio" className="bg-surface">stdio (local)</option>
+                <option value="http" className="bg-surface">http (remote)</option>
+              </select>
+              {newServer.type === "http" ? (
+                <input className="input !w-64" placeholder="https://mcp-server.example.com/mcp" value={newServer.url} onChange={(e) => setNewServer({ ...newServer, url: e.target.value })} />
+              ) : (
+                <>
+                  <input className="input !w-48" placeholder="command (e.g. npx)" value={newServer.command} onChange={(e) => setNewServer({ ...newServer, command: e.target.value })} />
+                  <input className="input !w-56" placeholder="args (e.g. @modelcontextprotocol/server-filesystem ./vault)" value={newServer.args} onChange={(e) => setNewServer({ ...newServer, args: e.target.value })} />
+                </>
+              )}
+              <button className="btn" onClick={addMcpServer}>
+                Add server
+              </button>
+            </div>
+            <p className="mt-3 text-[10.5px] text-faint">
+              After adding, hit <b>Save settings</b>. MCP tools appear in the Workspace as{" "}
+              <span className="mono">mcp__&lt;server&gt;__&lt;tool&gt;</span>.
+            </p>
+          </section>
+
+          {/* Travel */}
+          <section className="card p-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Plane size={14} className="text-accent2" />
+              <h2 className="text-[15px] font-[510] text-ink">Travel — Amadeus (free tier)</h2>
+            </div>
+            <p className="text-[12px] text-muted mb-4">
+              Get a free Self-Service key at developers.amadeus.com → the team can check flights and
+              file itineraries itself. Alternatively set <span className="mono">AMADEUS_CLIENT_ID/SECRET</span> env vars.
+            </p>
+            <div className="flex gap-2">
+              <input className="input mono" placeholder="Amadeus client ID" value={s.amadeusClientId} onChange={(e) => setS({ ...s, amadeusClientId: e.target.value })} />
+              <input className="input mono" type="password" placeholder="Amadeus client secret" value={s.amadeusClientSecret} onChange={(e) => setS({ ...s, amadeusClientSecret: e.target.value })} />
             </div>
           </section>
 

@@ -73,6 +73,12 @@ export const PROVIDERS: Record<
       "meta/llama-3.1-405b-instruct",
     ],
   },
+  ollama: {
+    label: "Ollama (local, offline)",
+    baseUrl: "http://localhost:11434/v1",
+    defaultModel: "llama3.1",
+    models: ["llama3.1", "llama3.3", "qwen2.5", "nemotron", "mistral"],
+  },
   gemini: {
     label: "Google Gemini",
     baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",

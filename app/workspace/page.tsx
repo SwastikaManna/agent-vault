@@ -38,6 +38,7 @@ export default function Workspace() {
   const [hasKey, setHasKey] = useState(false);
   const [settings, setSettings] = useState(loadSettings);
   const [savedConv, setSavedConv] = useState(false);
+  const [plan, setPlan] = useState<{ agent: string; instruction: string }[] | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const idRef = useRef(1);
 
@@ -72,11 +73,28 @@ export default function Workspace() {
     setInput("");
     setRunning(true);
     setActive("orchestrator");
+    setPlan(null);
 
     try {
       await consumeSSE(
         "/api/chat",
-        { provider: s.provider, apiKey: s.apiKey, model: s.model, history: [...history, { role: "user", content: trimmed }] },
+        {
+          provider: s.provider,
+          apiKey: s.apiKey,
+          model: s.model,
+          history: [...history, { role: "user", content: trimmed }],
+          mcpServers: s.mcpServers.map((m) => ({
+            name: m.name,
+            type: m.type,
+            command: m.command,
+            args: m.args ? m.args.split(" ").filter(Boolean) : [],
+            url: m.url,
+          })),
+          amadeus:
+            s.amadeusClientId && s.amadeusClientSecret
+              ? { clientId: s.amadeusClientId, clientSecret: s.amadeusClientSecret }
+              : undefined,
+        },
         (e: {
           type: string;
           agent?: string;
@@ -86,9 +104,12 @@ export default function Workspace() {
           result?: string;
           delta?: string;
           error?: string;
+          tasks?: { agent: string; instruction: string }[];
         }) => {
           if (e.type === "agent") {
             setActive(e.status === "done" ? null : (e.agent ?? null));
+          } else if (e.type === "plan") {
+            setPlan(e.tasks ?? null);
           } else if (e.type === "tool") {
             setMessages((prev) => {
               const next = [...prev];
@@ -270,6 +291,27 @@ export default function Workspace() {
                 <div className="flex items-center gap-2 text-[11.5px] text-faint mono">
                   <Loader2 size={12} className="animate-spin text-accent2" />
                   {active ? `${agentLabel(active)} working…` : "team thinking…"}
+                </div>
+              )}
+
+              {plan && plan.length > 0 && (
+                <div className="card p-3">
+                  <div className="text-[10px] font-[510] uppercase tracking-[0.08em] text-faint mb-2">Plan</div>
+                  <div className="space-y-1.5">
+                    {plan.map((t, i) => (
+                      <div key={i} className="flex items-start gap-2 text-[12px]">
+                        <span
+                          className="w-[6px] h-[6px] rounded-full mt-1 shrink-0"
+                          style={{ background: AGENT_COLORS[t.agent] ?? "#8a8f98" }}
+                        />
+                        <span className="text-muted leading-snug">
+                          <span className="text-silver font-[510]">{agentLabel(t.agent)}</span>
+                          {" — "}
+                          {t.instruction}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

@@ -6,6 +6,7 @@ import { ArrowRight, BookOpen, Dumbbell, Users, Zap, FileText } from "lucide-rea
 import TopBar from "@/components/topbar";
 import { TEAM_MEMBERS } from "@/lib/agents/roster";
 import { GYM_TASKS } from "@/lib/gym/tasks";
+import { STACK } from "@/lib/stack";
 
 interface Stats {
   notes: number;
@@ -110,6 +111,22 @@ export default function Dashboard() {
             ))}
           </div>
 
+          {/* local mode banner */}
+          <div className="card p-5 mb-10 border-accent/30 bg-accent/[0.06]">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center text-[15px]">🖥️</div>
+              <div className="min-w-0">
+                <div className="text-[13.5px] font-[510] text-ink">No API key? No problem — run fully local & free</div>
+                <p className="text-[12px] text-muted mt-0.5">
+                  Install <span className="mono text-silver">Ollama</span> (ollama.com), pull any model, then pick{" "}
+                  <span className="mono text-silver">"Ollama (local, offline)"</span> in Settings. The team thinks on your
+                  machine, works without internet, and pairs with Home Assistant for real device control on your LAN.
+                </p>
+              </div>
+              <Link href="/settings" className="btn btn-primary ml-auto shrink-0">Set up local mode</Link>
+            </div>
+          </div>
+
           {/* agents */}
           <div className="mb-10">
             <div className="flex items-center justify-between mb-3">
@@ -127,6 +144,29 @@ export default function Dashboard() {
                   </div>
                   <div className="text-[12.5px] font-[510] text-ink">{a.label}</div>
                   <div className="mt-1 text-[11px] text-muted leading-snug">{a.blurb}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* open-source stack */}
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[15px] font-[510] text-silver">Open-source stack — free alternatives to paid apps</h3>
+              <span className="text-[11px] text-faint mono">{STACK.length} apps · agents plug in via MCP / HTTP / local</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {STACK.map((app) => (
+                <div key={app.name} className="card p-4 hover:bg-white/[0.04] transition-colors">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-[510] text-ink">{app.name}</span>
+                    <span className={`tag mono ${app.access === "mcp" ? "!text-accent2" : app.access === "local" ? "!text-ok" : ""}`}>
+                      {app.access}
+                    </span>
+                    <span className="ml-auto text-[10px] text-faint mono">replaces {app.replaces.split(" (")[0]}</span>
+                  </div>
+                  <p className="mt-1.5 text-[11.5px] text-muted leading-snug">{app.blurb}</p>
+                  <p className="mt-1.5 text-[10.5px] text-faint mono truncate">{app.setup}</p>
                 </div>
               ))}
             </div>
